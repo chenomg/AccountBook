@@ -1,14 +1,12 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 """
 ZetCode PyQt5 tutorial
 
-In this example, we position two push
-buttons in the bottom-right corner
-of the window.
+In this example, we create a more
+complicated window layout using
+the QGridLayout manager.
 
 Author: Jan Bodnar
 Website: zetcode.com
@@ -16,9 +14,8 @@ Last edited: August 2017
 """
 
 import sys
-from PyQt5.QtWidgets import (QWidget, QPushButton,
-    QHBoxLayout, QVBoxLayout, QApplication)
-
+from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit,
+    QTextEdit, QGridLayout, QApplication)
 
 class Example(QWidget):
 
@@ -30,22 +27,30 @@ class Example(QWidget):
 
     def initUI(self):
 
-        okButton = QPushButton("OK")
-        cancelButton = QPushButton("Cancel")
+        title = QLabel('Title')
+        author = QLabel('Author')
+        review = QLabel('Review')
 
-        hbox = QHBoxLayout()
-        hbox.addStretch(1)
-        hbox.addWidget(okButton)
-        hbox.addWidget(cancelButton)
+        titleEdit = QLineEdit()
+        authorEdit = QLineEdit()
+        reviewEdit = QTextEdit()
 
-        vbox = QVBoxLayout()
-        vbox.addStretch(1)
-        vbox.addLayout(hbox)
+        grid = QGridLayout()
+        grid.setSpacing(10)
 
-        self.setLayout(vbox)
+        grid.addWidget(title, 1, 0)
+        grid.addWidget(titleEdit, 1, 1)
 
-        self.setGeometry(300, 300, 300, 150)
-        self.setWindowTitle('Buttons')
+        grid.addWidget(author, 2, 0)
+        grid.addWidget(authorEdit, 2, 1)
+
+        grid.addWidget(review, 3, 0)
+        grid.addWidget(reviewEdit, 3, 1, 5, 1)
+
+        self.setLayout(grid)
+
+        self.setGeometry(300, 300, 350, 300)
+        self.setWindowTitle('Review')
         self.show()
 
 
