@@ -1,0 +1,113 @@
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'mainwindow.ui'
+#
+# Created by: PyQt5 UI code generator 5.6
+#
+# WARNING! All changes made in this file will be lost!
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+class Ui_MainWindow(object):
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(600, 400)
+        self.centralWidget = QtWidgets.QWidget(MainWindow)
+        self.centralWidget.setObjectName("centralWidget")
+        self.ltitle_label = QtWidgets.QLabel(self.centralWidget)
+        self.ltitle_label.setGeometry(QtCore.QRect(372, 12, 180, 28))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.ltitle_label.sizePolicy().hasHeightForWidth())
+        self.ltitle_label.setSizePolicy(sizePolicy)
+        font = QtGui.QFont()
+        font.setPointSize(20)
+        self.ltitle_label.setFont(font)
+        self.ltitle_label.setObjectName("ltitle_label")
+        self.top_frame = QtWidgets.QFrame(self.centralWidget)
+        self.top_frame.setGeometry(QtCore.QRect(12, 56, 540, 271))
+        self.top_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.top_frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.top_frame.setObjectName("top_frame")
+        self.name_frame = QtWidgets.QFrame(self.top_frame)
+        self.name_frame.setGeometry(QtCore.QRect(13, 13, 141, 241))
+        self.name_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.name_frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.name_frame.setObjectName("name_frame")
+        self.name_listW = QtWidgets.QListWidget(self.name_frame)
+        self.name_listW.setGeometry(QtCore.QRect(13, 40, 111, 192))
+        self.name_listW.setObjectName("name_listW")
+        self.name_label = QtWidgets.QLabel(self.name_frame)
+        self.name_label.setGeometry(QtCore.QRect(13, 13, 65, 19))
+        self.name_label.setObjectName("name_label")
+        self.money_frame = QtWidgets.QFrame(self.top_frame)
+        self.money_frame.setGeometry(QtCore.QRect(170, 10, 224, 109))
+        self.money_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.money_frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.money_frame.setObjectName("money_frame")
+        self.gridLayout = QtWidgets.QGridLayout(self.money_frame)
+        self.gridLayout.setContentsMargins(11, 11, 11, 11)
+        self.gridLayout.setSpacing(6)
+        self.gridLayout.setObjectName("gridLayout")
+        self.yearly_label = QtWidgets.QLabel(self.money_frame)
+        self.yearly_label.setObjectName("yearly_label")
+        self.gridLayout.addWidget(self.yearly_label, 0, 0, 1, 1)
+        self.yearly_lineEdit = QtWidgets.QLineEdit(self.money_frame)
+        self.yearly_lineEdit.setObjectName("yearly_lineEdit")
+        self.gridLayout.addWidget(self.yearly_lineEdit, 0, 1, 1, 1)
+        self.now_label = QtWidgets.QLabel(self.money_frame)
+        self.now_label.setObjectName("now_label")
+        self.gridLayout.addWidget(self.now_label, 1, 0, 1, 1)
+        self.now_lineEdit = QtWidgets.QLineEdit(self.money_frame)
+        self.now_lineEdit.setObjectName("now_lineEdit")
+        self.gridLayout.addWidget(self.now_lineEdit, 1, 1, 1, 1)
+        self.remain_label = QtWidgets.QLabel(self.money_frame)
+        self.remain_label.setObjectName("remain_label")
+        self.gridLayout.addWidget(self.remain_label, 2, 0, 1, 1)
+        self.remain_lineEdit = QtWidgets.QLineEdit(self.money_frame)
+        self.remain_lineEdit.setObjectName("remain_lineEdit")
+        self.gridLayout.addWidget(self.remain_lineEdit, 2, 1, 1, 1)
+        self.buttom_frame = QtWidgets.QFrame(self.top_frame)
+        self.buttom_frame.setGeometry(QtCore.QRect(430, 0, 111, 271))
+        self.buttom_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.buttom_frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.buttom_frame.setObjectName("buttom_frame")
+        self.apply_pushButton = QtWidgets.QPushButton(self.buttom_frame)
+        self.apply_pushButton.setGeometry(QtCore.QRect(-10, 10, 113, 32))
+        self.apply_pushButton.setObjectName("apply_pushButton")
+        self.cancel_pushButton = QtWidgets.QPushButton(self.buttom_frame)
+        self.cancel_pushButton.setGeometry(QtCore.QRect(-10, 60, 113, 32))
+        self.cancel_pushButton.setObjectName("cancel_pushButton")
+        MainWindow.setCentralWidget(self.centralWidget)
+        self.mainToolBar = QtWidgets.QToolBar(MainWindow)
+        self.mainToolBar.setObjectName("mainToolBar")
+        MainWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.mainToolBar)
+        self.statusBar = QtWidgets.QStatusBar(MainWindow)
+        self.statusBar.setObjectName("statusBar")
+        MainWindow.setStatusBar(self.statusBar)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.ltitle_label.setText(_translate("MainWindow", "百联置业交通费报销"))
+        self.name_label.setText(_translate("MainWindow", "员工姓名："))
+        self.yearly_label.setText(_translate("MainWindow", "年度总额："))
+        self.now_label.setText(_translate("MainWindow", "本次报销："))
+        self.remain_label.setText(_translate("MainWindow", "年度剩余："))
+        self.apply_pushButton.setText(_translate("MainWindow", "提交"))
+        self.cancel_pushButton.setText(_translate("MainWindow", "撤销"))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    sys.exit(app.exec_())
+
