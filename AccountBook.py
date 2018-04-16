@@ -1,78 +1,47 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-ZetCode PyQt5 tutorial
-
-In this example, we create a more
-complicated window layout using
-the QGridLayout manager.
-
-Author: Jan Bodnar
-Website: zetcode.com
-Last edited: August 2017
-"""
-
-import sys
-from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QTextEdit,
-                             QGridLayout, QApplication, QListWidget,
-                             QPushButton)
+from mainwindow import Ui_MainWindow
+from PyQt5 import QtGui, QtCore, QtWidgets
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QApplication, QInputDialog, QLineEdit
+from PyQt5.QtCore import QDir
 
 
-class Window(QWidget):
+class AccountBook(QMainWindow):
     def __init__(self):
+        # QtWidgets.QDialog.__init__(self)
         super().__init__()
-
-        self.initUI()
-
-    def initUI(self):
-
-        # 创建控件
-        name_Label = QLabel('员工姓名:')
-        yearly_Label = QLabel('年度总额:')
-        now_Lable = QLabel('本次报销:')
-        remain_Lable = QLabel('年度剩余:')
-
-        name_List = QListWidget()
-
-        yearly_Edit = QLineEdit()
-        now_Edit = QLineEdit()
-        remain_Edit = QLineEdit()
-
-        apply_Button = QPushButton('提交数据')
-        undo_Button = QPushButton('撤销本次')
-
-        # 布局控件
-        grid = QGridLayout()
-        grid.setSpacing(10)
-
-        grid.addWidget(name_Label, 1, 0)
-        grid.addWidget(name_List, 1, 1, 3, 1)
-        name_List.setFixedsize(50, 30)
-
-        grid.addWidget(yearly_Label, 1, 2)
-        grid.addWidget(yearly_Edit, 1, 3)
-
-        grid.addWidget(now_Lable, 2, 2)
-        grid.addWidget(now_Edit, 2, 3)
-
-        grid.addWidget(remain_Lable, 3, 2)
-        grid.addWidget(remain_Edit, 3, 3)
-
-        grid.addWidget(apply_Button, 1, 4, 2, 1)
-        grid.addWidget(undo_Button, 3, 4)
-        self.setLayout(grid)
-
-        # set the value in name_List
-        name_List.addItem('Grace Gao')
-        name_List.addItem('Jase Chen')
-        # 设置窗口
-        self.setGeometry(300, 300, 600, 400)
-        self.setWindowTitle('百联置业交通费出账/记录')
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+        self.ui.apply_pushButton.clicked.connect(self.apply_PushButtonClicked)
+        self.ui.cancel_pushButton.clicked.connect(
+            self.cancel_PushButtonClicked)
         self.show()
 
+    def apply_PushButtonClicked(self):
+        # box = QMessageBox()
+        # box.information(self, 'Message', '你已提交成功')
+        box = QInputDialog()
+        text, ok = box.getText(
+            self,
+            'add person',
+            'Input Name:', QLineEdit.Normal, QDir.home().dirName()
+        )
+        if ok and text != '':
+            self.ui.name_listWidget.addItem(text)
 
-if __name__ == '__main__':
+    def cancel_PushButtonClicked(self):
+        msgBox = QMessageBox(QMessageBox.Warning, "Warning!", '确定要撤销本次操作吗？',
+                             QMessageBox.NoButton, self)
+        msgBox.addButton("Yes, cancel now!", QMessageBox.AcceptRole)
+        msgBox.addButton("No", QMessageBox.RejectRole)
+        if msgBox.exec_() == QMessageBox.AcceptRole:
+            pass
+        else:
+            pass
 
+
+if __name__ == "__main__":
+    import sys
     app = QApplication(sys.argv)
-    ex = Window()
+    MainWindow = AccountBook()
     sys.exit(app.exec_())
