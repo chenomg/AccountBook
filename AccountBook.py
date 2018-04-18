@@ -20,19 +20,22 @@ class AccountBook(QMainWindow):
             self.cancel_PushButtonClicked)
 
         # 检测是否存在db.sqlit不存在的话则根据表格创建数据库
-        sqlite_exist = self.sqlite_exist()
-        if not sqlite_exist:
+        self.sqlite_exist()
+        if not self.sqlite_exist():
             self.ui.init_pushButton.setEnabled(True)
             self.ui.init_pushButton.clicked.connect(self.init)
 
+        self.show_Name_listWidge()
+        self.show()
+
+    def show_Name_listWidge(self):
+        # 检测是否存在db.sqlit不存在的话则根据表格创建数据库
+        sqlite_exist = self.sqlite_exist()
         # name_listWidget显示员工清单
         if sqlite_exist:
             names = self.get_Name_List()
             for name in names:
                 self.ui.name_listWidget.addItem(name)
-
-
-        self.show()
 
     def apply_PushButtonClicked(self):
         # box = QMessageBox()
@@ -92,6 +95,7 @@ class AccountBook(QMainWindow):
         conn.commit()
         conn.close()
         self.ui.init_pushButton.setEnabled(False)
+        self.show_Name_listWidge()
 
     def get_Name_List(self):
         conn = sqlite3.connect('db.sqlite')
