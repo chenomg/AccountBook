@@ -11,6 +11,8 @@ import datetime
 
 
 class AccountBook(QMainWindow):
+    cancel_count = 0
+
     def __init__(self):
         super().__init__()
         # 设置初始数值
@@ -53,10 +55,7 @@ class AccountBook(QMainWindow):
         now = datetime.datetime.now()
         return now.month
 
-    def show_Selected_Info(self, item):
-        # 如果有员工被选中则在右边显示相关信息
-        self.name_selected = self.ui.name_listWidget.selectedItems()[0].text()
-        print(str(type(self.name_selected)) + ':' + self.name_selected)
+    def update_info(self):
         conn = sqlite3.connect('db.sqlite')
         cursor = conn.cursor()
         cursor.execute("SELECT TOTAL, REMAIN FROM DATASHEET WHERE NAME=?",
@@ -73,6 +72,12 @@ class AccountBook(QMainWindow):
             self.ui.remain_lineEdit.setText('0')
         cursor.close()
 
+    def show_Selected_Info(self, item):
+        # 如果有员工被选中则在右边显示相关信息
+        self.name_selected = self.ui.name_listWidget.selectedItems()[0].text()
+        print(str(type(self.name_selected)) + ':' + self.name_selected)
+        self.update_info()
+
     def show_Name_listWidge(self):
         # 检测是否存在db.sqlit不存在的话则根据表格创建数据库
         sqlite_exist = self.sqlite_exist()
@@ -84,7 +89,7 @@ class AccountBook(QMainWindow):
 
     def submit_PushButtonClicked(self):
         if self.name_selected:
-            submit_value = self.ui.submit_lineEdit.text()
+            submit_value = int(self.ui.submit_lineEdit.text())
             month_id = self.get_month()
             months = [
                 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP',
@@ -95,24 +100,35 @@ class AccountBook(QMainWindow):
             # 更新数据库数据
             conn = sqlite3.connect('db.sqlite')
             cursor = conn.cursor()
-            cursor.execute(
-                "SELECT ?, EXTRACTED, REMAIN FROM DATASHEET WHERE NAME = ?",
-                (month, self.name_selected, ))
+            sql = "SELECT " + month + ", EXTRACTED, REMAIN FROM DATASHEET WHERE NAME = '" + self.name_selected + "'"
+            print(sql)
+            cursor.execute(sql)
             datas = cursor.fetchall()
             print(datas)
             for data in datas:
                 month_value = data[0]
+                if not month_value:
+                    month_value = 0
                 extracted_value = data[1]
                 remain_value = data[2]
-            cursor.execute(
-                "UPDATE DATASHEET SET ? = ?, EXTRACTED = ?, REMAIN = ?",
-                (month, month_value, int(extracted_value) + int(submit_value),
-                 int(remain_value) - int(submit_value),))
-            cursor.commit()
-            cursor.close()
+                print(
+                    str(extracted_value) + '\n' + str(remain_value) + '\n' +
+                    str(month_value))
+                extracted_value_update = 0
+                extracted_value_update = extracted_value + submit_value
+                remain_value_update = int(remain_value) - int(submit_value)
+            sql2 = "UPDATE DATASHEET SET " + month + " = " + str(
+                month_value + submit_value) + ", EXTRACTED = " + str(
+                    extracted_value_update) + ", REMAIN = " + str(
+                        remain_value_update) + " WHERE NAME = '" + str(
+                            self.name_selected) + "'"
+            cursor.execute(sql2)
+            conn.commit()
+            conn.close()
             # print(submit_value)
             box = QMessageBox()
             box.information(self, 'Message', '你已提交成功')
+            self.update_info()
         else:
             box = QMessageBox()
             box.information(self, 'Message', '请选择员工进行操！')
