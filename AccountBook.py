@@ -8,6 +8,8 @@ import sqlite3
 import xlrd
 import os
 import datetime
+import win32con
+import win32api
 
 
 class AccountBook(QMainWindow):
@@ -182,6 +184,8 @@ class AccountBook(QMainWindow):
         conn.close()
         self.ui.init_pushButton.setEnabled(False)
         self.show_Name_listWidge()
+        # 隐藏数据库文件
+        win32api.SetFileAttributes('db.sqlite', win32con.FILE_ATTRIBUTE_HIDDEN)
 
     def get_Name_List(self):
         conn = sqlite3.connect('db.sqlite')
