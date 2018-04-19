@@ -1,19 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from mainwindow import Ui_MainWindow
-from PyQt5 import QtGui, QtCore, QtWidgets
-from PyQt5.QtWidgets import QMainWindow, QMessageBox, QApplication, QInputDialog, QLineEdit
-from PyQt5.QtCore import QDir
+# from PyQt5 import QtGui, QtCore, QtWidgets
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QApplication
 import sqlite3
 import xlrd
 import os
 import datetime
-import win32con
-import win32api
+import re
+from platform import platform
 
 
 class AccountBook(QMainWindow):
-    cancel_count = 0
 
     def __init__(self):
         super().__init__()
@@ -22,6 +20,13 @@ class AccountBook(QMainWindow):
         self.total_selected = 0
         self.remain_selected = 0
         self.submit_value = 0
+        # 设置撤销按钮参数
+        self.cancel_count = 0
+        self.cancel_name = ''
+        self.cancel_value = 0
+        self.cancel_month = ''
+        # 检测是否为Windows平台
+        self.Platform = platform()
 
         # 启动UI
         # super().__init__()
@@ -74,6 +79,33 @@ class AccountBook(QMainWindow):
             self.ui.remain_lineEdit.setText('0')
         cursor.close()
 
+    def update_db(self, name, month, value):
+        # 更新数据库数据
+        conn = sqlite3.connect('db.sqlite')
+        cursor = conn.cursor()
+        # 获取现在数据库内数据
+        sql = "SELECT " + month + \
+            ", EXTRACTED, REMAIN FROM DATASHEET WHERE NAME = '" + name + "'"
+        cursor.execute(sql)
+        datas = cursor.fetchall()
+        for data in datas:
+            month_value = data[0]
+            if not month_value:
+                month_value = 0
+            extracted_value = data[1]
+            remain_value = data[2]
+            extracted_value_update = extracted_value + value
+            remain_value_update = remain_value - value
+        # 更新数据库内数据
+        sql2 = "UPDATE DATASHEET SET " + month + " = " + str(
+            month_value + value) + ", EXTRACTED = " + str(
+                extracted_value_update) + ", REMAIN = " + str(
+                    remain_value_update) + " WHERE NAME = '" + str(
+                        name) + "'"
+        cursor.execute(sql2)
+        conn.commit()
+        conn.close()
+
     def show_Selected_Info(self, item):
         # 如果有员工被选中则在右边显示相关信息
         self.name_selected = self.ui.name_listWidget.selectedItems()[0].text()
@@ -82,12 +114,13 @@ class AccountBook(QMainWindow):
 
     def show_Name_listWidge(self):
         # 检测是否存在db.sqlit不存在的话则根据表格创建数据库
-        sqlite_exist = self.sqlite_exist()
         # name_listWidget显示员工清单
-        if sqlite_exist:
+        if self.sqlite_exist():
             names = self.get_Name_List()
             for name in names:
                 self.ui.name_listWidget.addItem(name)
+        else:
+            print("There's no db.sqlite file exists!")
 
     def submit_PushButtonClicked(self):
         if self.name_selected:
@@ -98,50 +131,41 @@ class AccountBook(QMainWindow):
                 'OCT', 'NOV', 'DEC'
             ]
             month = months[month_id - 1]
-            print(month)
             # 更新数据库数据
-            conn = sqlite3.connect('db.sqlite')
-            cursor = conn.cursor()
-            sql = "SELECT " + month + ", EXTRACTED, REMAIN FROM DATASHEET WHERE NAME = '" + self.name_selected + "'"
-            print(sql)
-            cursor.execute(sql)
-            datas = cursor.fetchall()
-            print(datas)
-            for data in datas:
-                month_value = data[0]
-                if not month_value:
-                    month_value = 0
-                extracted_value = data[1]
-                remain_value = data[2]
-                print(
-                    str(extracted_value) + '\n' + str(remain_value) + '\n' +
-                    str(month_value))
-                extracted_value_update = 0
-                extracted_value_update = extracted_value + submit_value
-                remain_value_update = int(remain_value) - int(submit_value)
-            sql2 = "UPDATE DATASHEET SET " + month + " = " + str(
-                month_value + submit_value) + ", EXTRACTED = " + str(
-                    extracted_value_update) + ", REMAIN = " + str(
-                        remain_value_update) + " WHERE NAME = '" + str(
-                            self.name_selected) + "'"
-            cursor.execute(sql2)
-            conn.commit()
-            conn.close()
-            # print(submit_value)
+            self.update_db(name=self.name_selected,
+                           month=month, value=submit_value)
+            self.cancel_name = self.name_selected
+            self.cancel_value = submit_value
+            self.cancel_month = month
+            self.cancel_count = 1
             box = QMessageBox()
-            box.information(self, 'Message', '你已提交成功')
+            box.information(self, 'Message', '提交成功')
             self.update_info()
+            # 更新数据后将提交输入栏置零，防止误操作
+            self.ui.submit_lineEdit.setText('0')
         else:
             box = QMessageBox()
-            box.information(self, 'Message', '请选择员工进行操！')
+            box.information(self, 'Message', '请选择员工进行操作！')
 
     def cancel_PushButtonClicked(self):
-        msgBox = QMessageBox(QMessageBox.Warning, "Warning!", '确定要撤销本次操作吗？',
+        msgBox = QMessageBox(QMessageBox.Warning, "Warning!",
+                             '确定要撤销本次操作吗？\n'
+                             + self.cancel_name
+                             + ': '+str(self.cancel_value),
                              QMessageBox.NoButton, self)
-        msgBox.addButton("Yes, cancel now!", QMessageBox.AcceptRole)
+        msgBox.addButton("Yes!", QMessageBox.AcceptRole)
         msgBox.addButton("No", QMessageBox.RejectRole)
         if msgBox.exec_() == QMessageBox.AcceptRole:
-            pass
+            if self.cancel_count:
+                self.update_db(name=self.cancel_name,
+                               month=self.cancel_month, value=-self.cancel_value)
+                self.cancel_count = 0
+                QMessageBox().information(self, 'Message', '撤销成功')
+                self.update_info()
+                # 更新数据后将提交输入栏置零，防止误操作
+                self.ui.submit_lineEdit.setText('0')
+            else:
+                QMessageBox().information(self, 'Message', '当前无法撤销')
         else:
             pass
 
@@ -149,29 +173,30 @@ class AccountBook(QMainWindow):
         """
         根据表格内容创建数据库
         """
+        # 创建员工信息表
         filename = 'data.xls'
         data = xlrd.open_workbook(filename)
         conn = sqlite3.connect('db.sqlite')
         conn.execute(u'''CREATE TABLE DATASHEET(
-        ID INT PRIMARY KEY NOT NULL,
-        NAME CHAR(10) NOT NULL,
-        JAN INT,
-        FEB INT,
-        MAR INT,
-        APR INT,
-        MAY INT,
-        JUN INT,
-        JUL INT,
-        AUG INT,
-        SEP INT,
-        OCT INT,
-        NOV INT,
-        DEC INT,
-        MONTHLY INT NOT NULL,
-        MONTHS INT NOT NULL,
-        TOTAL INT NOT NULL,
-        EXTRACTED INT NOT NULL,
-        REMAIN INT NOT NULL);''')
+            ID INT PRIMARY KEY NOT NULL,
+            NAME CHAR(10) NOT NULL,
+            JAN INT,
+            FEB INT,
+            MAR INT,
+            APR INT,
+            MAY INT,
+            JUN INT,
+            JUL INT,
+            AUG INT,
+            SEP INT,
+            OCT INT,
+            NOV INT,
+            DEC INT,
+            MONTHLY INT NOT NULL,
+            MONTHS INT NOT NULL,
+            TOTAL INT NOT NULL,
+            EXTRACTED INT NOT NULL,
+            REMAIN INT NOT NULL);''')
         table = data.sheets()[0]
         nrows = table.nrows
         for i in range(nrows - 1):
@@ -182,10 +207,29 @@ class AccountBook(QMainWindow):
                          (insertDatas))
         conn.commit()
         conn.close()
+        # 创建操作记录数据库记录表
+        conn = sqlite3.connect('db.sqlite')
+        conn.execute(u'''CREATE TABLE HISTORY(
+            ID INT PRIMARY KEY NOT NULL,
+            NAME CHAR(10) NOT NULL,
+            MONTH INT NOT NULL,
+            SUBMIT INT NOT NULL,
+            TOTAL INT NOT NULL,
+            EXTRACTED INT NOT NULL,
+            REMAIN INT NOT NULL);''')
+        conn.commit()
+        conn.close()
+        # 初始化按钮不可用
         self.ui.init_pushButton.setEnabled(False)
         self.show_Name_listWidge()
-        # 隐藏数据库文件
-        win32api.SetFileAttributes('db.sqlite', win32con.FILE_ATTRIBUTE_HIDDEN)
+        if re.findall(r'^windows.*', self.Platform, re.I):
+            import win32con
+            import win32api
+            # 隐藏数据库文件
+            win32api.SetFileAttributes(
+                'db.sqlite', win32con.FILE_ATTRIBUTE_HIDDEN)
+        else:
+            pass
 
     def get_Name_List(self):
         conn = sqlite3.connect('db.sqlite')
