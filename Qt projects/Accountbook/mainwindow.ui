@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
+    <width>660</width>
     <height>442</height>
    </rect>
   </property>
@@ -18,13 +18,13 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>600</width>
+    <width>660</width>
     <height>442</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>600</width>
+    <width>660</width>
     <height>442</height>
    </size>
   </property>
@@ -102,11 +102,17 @@
        <number>0</number>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <property name="leftMargin">
+        <number>20</number>
+       </property>
+       <property name="rightMargin">
+        <number>20</number>
+       </property>
        <item>
         <widget class="QFrame" name="name_frame">
          <property name="maximumSize">
           <size>
-           <width>180</width>
+           <width>130</width>
            <height>16777215</height>
           </size>
          </property>
@@ -167,12 +173,6 @@
           <enum>QFrame::Raised</enum>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_5">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>12</number>
-          </property>
           <item>
            <widget class="QFrame" name="top_frame">
             <property name="maximumSize">
