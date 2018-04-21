@@ -343,7 +343,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="addstaff_pushButton">
+              <widget class="QPushButton" name="addStaff_pushButton">
                <property name="text">
                 <string>新员工导入</string>
                </property>

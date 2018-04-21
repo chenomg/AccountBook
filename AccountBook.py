@@ -1,5 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+'''
+# =============================================================================
+#      FileName: AccountBook.py
+#          Desc: use to record the account
+#        Author: Jase Chen
+#         Email: xxmm@live.cn
+#      HomePage: http://jase.im/
+#       Version: 0.0.1
+#    LastChange: 2018-04-21 20:56:09
+#       History:
+# =============================================================================
+'''
 from mainwindow import Ui_MainWindow
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QApplication
 import sqlite3
@@ -18,6 +30,8 @@ class AccountBook(QMainWindow):
         self.total_selected = 0
         self.remain_selected = 0
         self.submit_value = 0
+        # 设置提取时金额不能过大，默认为最大只能提取到下个月为止，若过大会提醒
+        self.over_months = 1
         # 设置撤销按钮参数
         self.cancel_count = 0
         self.cancel_name = ''
@@ -35,13 +49,14 @@ class AccountBook(QMainWindow):
         self.ui.submit_lineEdit.setText(str(self.submit_value))
 
         # 检测是否存在db.sqlit不存在的话则按下初始化按钮后根据表格创建数据库
-        self.sqlite_exist()
         if not self.sqlite_exist():
             self.ui.init_pushButton.setEnabled(True)
             self.ui.init_pushButton.clicked.connect(self.init)
         else:
             # 姓名栏显示员工姓名
             self.show_Name_listWidge()
+            # 设置初始历史记录显示
+            self.update_info()
 
         # 设置事件动作
         self.ui.submit_pushButton.clicked.connect(
@@ -50,6 +65,12 @@ class AccountBook(QMainWindow):
             self.cancel_PushButtonClicked)
         # 如果有员工被选中则在右边显示相关信息
         self.ui.name_listWidget.itemClicked.connect(self.show_Selected_Info)
+        # 提交栏内输入完后按回车键直接提交
+        self.ui.submit_lineEdit.returnPressed.connect(
+            self.submit_PushButtonClicked)
+        # 增加新员工按钮
+        self.ui.addstaff_pushButton.clicked.connect(
+            self.addStaff_PushButtonClicked)
 
         self.show()
 
@@ -77,22 +98,24 @@ class AccountBook(QMainWindow):
             self.ui.yearly_lineEdit.setText('0')
             self.ui.remain_lineEdit.setText('0')
         # 更新历史记录栏信息
-        cursor.execute(
-            "SELECT NAME, UPDATETIME, SUBMIT, EXTRACTED_UPDATE, REMAIN_UPDATE FROM HISTORY WHERE NAME=?",
-            (self.name_selected, ))
+        if self.name_selected:
+            cursor.execute(
+                "SELECT NAME, UPDATETIME, SUBMIT, EXTRACTED_UPDATE, REMAIN_UPDATE FROM HISTORY WHERE NAME=?",
+                (self.name_selected, ))
+        else:
+            cursor.execute(
+                "SELECT NAME, UPDATETIME, SUBMIT, EXTRACTED_UPDATE, REMAIN_UPDATE FROM HISTORY"
+            )
         infos = cursor.fetchall()
-        print(infos)
         if infos:
-            history_one_text = []
             history_text_list = []
             for info in infos:
-                print(info)
                 string = str(info[0]) + ":于" + str(info[1]) + ' 提交:' + str(
                     info[2]) + ' 共支取:' + str(info[3]) + ' 剩余:' + str(info[4])
                 history_text_list.append(string)
-                print(history_text_list)
-            # for t in range(len(history_text_list)-1,0,-1):
-            out = '\n'.join(history_text_list)
+            history_text_list_reversed = history_text_list[::-1]
+            print(history_text_list_reversed)
+            out = '\n'.join(history_text_list_reversed)
             self.ui.history_textBrowser.setText(out)
         else:
             self.ui.history_textBrowser.setText('')
@@ -128,17 +151,21 @@ class AccountBook(QMainWindow):
         cursor = conn.cursor()
         c = cursor.execute("SELECT * FROM HISTORY")
         history_rows = len(c.fetchall())
-        Id = int(history_rows) + 1
-        updatetime = datetime.datetime.now()
-        updatetime_str = updatetime.strftime("%Y-%m-%d %H:%M:%S")
-        sql3 = "INSERT INTO HISTORY(ID, UPDATETIME, NAME, SUBMIT, EXTRACTED_UPDATE, REMAIN_UPDATE)\
-            VALUES({ID}, '{UPDATETIME}', '{NAME}', '{SUBMIT}', '{EXTRACTED_UPDATE}', '{REMAIN_UPDATE}');".format(
-            ID=Id,
-            UPDATETIME=updatetime_str,
-            NAME=name,
-            SUBMIT=value,
-            EXTRACTED_UPDATE=extracted_value_update,
-            REMAIN_UPDATE=remain_value_update)
+        print('history_rows: {}'.format(history_rows))
+        if value > 0:
+            Id = int(history_rows) + 1
+            updatetime = datetime.datetime.now()
+            updatetime_str = updatetime.strftime("%Y-%m-%d %H:%M:%S")
+            sql3 = "INSERT INTO HISTORY(ID, UPDATETIME, NAME, SUBMIT, EXTRACTED_UPDATE, REMAIN_UPDATE)\
+                VALUES({ID}, '{UPDATETIME}', '{NAME}', '{SUBMIT}', '{EXTRACTED_UPDATE}', '{REMAIN_UPDATE}');".format(
+                ID=Id,
+                UPDATETIME=updatetime_str,
+                NAME=name,
+                SUBMIT=value,
+                EXTRACTED_UPDATE=extracted_value_update,
+                REMAIN_UPDATE=remain_value_update)
+        else:
+            sql3 = "DELETE FROM HISTORY WHERE ID = {}".format(history_rows)
         cursor.execute(sql3)
         conn.commit()
         cursor.close()
@@ -155,49 +182,103 @@ class AccountBook(QMainWindow):
         # name_listWidget显示员工清单
         if self.sqlite_exist():
             names = self.get_Name_List()
+            self.ui.name_listWidget.clear()
             for name in names:
                 self.ui.name_listWidget.addItem(name)
         else:
             print("There's no db.sqlite file exists!")
 
+    def submit_Value_Check(self, submit_value, month_now, monthly, remain):
+        # 用来检查当前输入值是否过大（最大只能超前一个月领取）
+        remain_update_minimum = monthly * (12 - month_now - self.over_months)
+        if remain - submit_value >= remain_update_minimum:
+            return True
+        else:
+            return False
+
     def submit_PushButtonClicked(self):
+        # 提交按钮
         if self.name_selected:
-            submit_value = int(self.ui.submit_lineEdit.text())
-            if submit_value:
-                month_id = self.get_month()
-                months = [
-                    'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG',
-                    'SEP', 'OCT', 'NOV', 'DEC'
-                ]
-                month = months[month_id - 1]
-                # 更新数据库数据
-                self.update_db(
-                    name=self.name_selected, month=month, value=submit_value)
-                self.cancel_name = self.name_selected
-                self.cancel_value = submit_value
-                self.cancel_month = month
-                self.cancel_count = 1
-                box = QMessageBox()
-                box.information(self, 'Message', '提交成功')
-                self.update_info()
-                # 更新数据后将提交输入栏置零，防止误操作
-                self.ui.submit_lineEdit.setText('0')
+            submit_str = self.ui.submit_lineEdit.text()
+            if re.findall(r'^\d+\.?$', submit_str):
+                submit_value = int(self.ui.submit_lineEdit.text())
+                if submit_value:
+                    month_id = self.get_month()
+                    months = [
+                        'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG',
+                        'SEP', 'OCT', 'NOV', 'DEC'
+                    ]
+                    month = months[month_id - 1]
+                    # 先判断数据提交后资金提取值是否过大，只能按照最大超前一个月提取交通费，不然给与提醒后再添加
+                    conn = sqlite3.connect('db.sqlite')
+                    cursor = conn.cursor()
+                    sql = "SELECT MONTHLY, REMAIN FROM DATASHEET WHERE NAME = '{name}'".format(
+                        name=self.name_selected)
+                    cursor.execute(sql)
+                    infos = cursor.fetchall()
+                    if infos:
+                        for info in infos:
+                            monthly = info[0]
+                            remain = info[1]
+                    else:
+                        pass
+                    if self.submit_Value_Check(submit_value, month_id, monthly,
+                                               remain):
+                        # 更新数据库数据
+                        self.update_db(
+                            name=self.name_selected,
+                            month=month,
+                            value=submit_value)
+                        self.cancel_name = self.name_selected
+                        self.cancel_value = submit_value
+                        self.cancel_month = month
+                        self.cancel_count = 1
+                        box = QMessageBox()
+                        box.information(self, 'Message', '提交成功')
+                        self.update_info()
+                    else:
+                        msgBox = QMessageBox(QMessageBox.Warning, "Warning!",
+                                             '提交数据过大，请核对！\n确认提交？',
+                                             QMessageBox.NoButton, self)
+                        msgBox.addButton("Yes!", QMessageBox.AcceptRole)
+                        msgBox.addButton("No", QMessageBox.RejectRole)
+                        if msgBox.exec_() == QMessageBox.AcceptRole:
+                            # 更新数据库数据
+                            self.update_db(
+                                name=self.name_selected,
+                                month=month,
+                                value=submit_value)
+                            self.cancel_name = self.name_selected
+                            self.cancel_value = submit_value
+                            self.cancel_month = month
+                            self.cancel_count = 1
+                            box = QMessageBox()
+                            box.information(self, 'Message', '提交成功')
+                            self.update_info()
+                        else:
+                            box = QMessageBox()
+                            box.information(self, 'Message', '已取消~')
+                    # 更新数据后将提交输入栏置零，防止误操作
+                    self.ui.submit_lineEdit.setText('0')
+                else:
+                    box = QMessageBox()
+                    box.information(self, 'Message', '请输入数据')
             else:
                 box = QMessageBox()
-                box.information(self, 'Message', '请输入数据')
+                box.information(self, 'Message', '请检查数据是否正确!\n请输入整数。。。')
         else:
             box = QMessageBox()
             box.information(self, 'Message', '请选择员工进行操作！')
 
     def cancel_PushButtonClicked(self):
-        msgBox = QMessageBox(
-            QMessageBox.Warning, "Warning!",
-            '确定要撤销本次操作吗？\n' + self.cancel_name + ': ' + str(self.cancel_value),
-            QMessageBox.NoButton, self)
-        msgBox.addButton("Yes!", QMessageBox.AcceptRole)
-        msgBox.addButton("No", QMessageBox.RejectRole)
-        if msgBox.exec_() == QMessageBox.AcceptRole:
-            if self.cancel_count:
+        if self.cancel_count:
+            msgBox = QMessageBox(QMessageBox.Warning, "Warning!",
+                                 '确定要撤销本次操作吗？\n' + self.cancel_name + ': ' +
+                                 str(self.cancel_value), QMessageBox.NoButton,
+                                 self)
+            msgBox.addButton("Yes!", QMessageBox.AcceptRole)
+            msgBox.addButton("No", QMessageBox.RejectRole)
+            if msgBox.exec_() == QMessageBox.AcceptRole:
                 self.update_db(
                     name=self.cancel_name,
                     month=self.cancel_month,
@@ -207,10 +288,46 @@ class AccountBook(QMainWindow):
                 self.update_info()
                 # 更新数据后将提交输入栏置零，防止误操作
                 self.ui.submit_lineEdit.setText('0')
+                self.update_info()
             else:
-                QMessageBox().information(self, 'Message', '当前无法撤销')
+                pass
         else:
-            pass
+            QMessageBox().information(self, 'Message', '当前无法撤销')
+
+    def addStaff_PushButtonClicked(self):
+        """
+        根据表格内容把新员工信息更新在数据库
+        """
+        # 增加新员工信息表
+        if self.sqlite_exist():
+            filename = 'data.xls'
+            data = xlrd.open_workbook(filename)
+            conn = sqlite3.connect('db.sqlite')
+            table = data.sheets()[0]
+            nrows = table.nrows
+            count = 0
+            for i in range(nrows - 1):
+                insertDatas = table.row_values(i + 1)
+                if insertDatas[1] not in self.get_Name_List():
+                    conn.execute('''INSERT INTO DATASHEET(
+                    ID,NAME,JAN,FEB,MAR,APR,MAY,JUN,JUL,AUG,SEP,OCT,NOV,DEC,MONTHLY,MONTHS,TOTAL,EXTRACTED,REMAIN
+                    ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                                 (insertDatas))
+                    count += 1
+                else:
+                    pass
+            box = QMessageBox()
+            if count:
+                box.information(
+                    self, 'Message', '新员工添加成功\n共添加{num}个员工'.format(num=count))
+            else:
+                box.information(self, 'Message', '没有新员工添加')
+            conn.commit()
+            conn.close()
+            self.show_Name_listWidge()
+        else:
+            box = QMessageBox()
+            box.information(self, 'Message', '请先初始化员工数据')
 
     def init(self):
         """
