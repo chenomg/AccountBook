@@ -343,14 +343,14 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="addstaff_pushButton">
+              <widget class="QPushButton" name="addStaff_pushButton">
                <property name="text">
                 <string>新员工导入</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton">
+              <widget class="QPushButton" name="export_pushButton">
                <property name="text">
                 <string>输出记录</string>
                </property>

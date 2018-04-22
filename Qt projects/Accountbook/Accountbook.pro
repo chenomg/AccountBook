@@ -25,10 +25,17 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    exportwindow.cpp
 
 HEADERS += \
-        mainwindow.h
+        mainwindow.h \
+    exportwindow.h \
+    exportwindow.h
 
 FORMS += \
-        mainwindow.ui
+        mainwindow.ui \
+    exportwindow.ui
+
+DISTFILES += \
+    ExportSelectWindow.py
