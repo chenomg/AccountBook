@@ -13,12 +13,13 @@
 # =============================================================================
 '''
 from mainwindow import Ui_MainWindow
-from PyQt5.QtWidgets import QMainWindow, QMessageBox, QApplication
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QApplication, QInputDialog, QLineEdit
 import sqlite3
 import xlrd
 import os
 import datetime
 import re
+import sys
 from platform import platform
 
 
@@ -69,17 +70,55 @@ class AccountBook(QMainWindow):
         self.ui.submit_lineEdit.returnPressed.connect(
             self.submit_PushButtonClicked)
         # 增加新员工按钮
-        self.ui.addstaff_pushButton.clicked.connect(
+        self.ui.addStaff_pushButton.clicked.connect(
             self.addStaff_PushButtonClicked)
+        # 点击输出按钮然后弹出选择需要导出的时间以及人员
+        self.ui.export_pushButton.clicked.connect(
+            self.export_DB_months_selected)
 
         self.show()
 
+    def export_get_months_IDs(self, text):
+        # 输入包含月份的字符串，例如：‘1-3 5-7,9 2-4  6, 1-8’
+        IDs_groups = re.findall(r'(\d+\-\d+)|(\d+)', text)
+        IDs_list_str = []
+        for i in IDs_groups:
+            for j in i:
+                if j:
+                    IDs_list_str.append(j)
+        # 返回例如：['1-3', '5-7', '9', '2-4', '6', '1-8']
+        return IDs_list_str
+
+    def export_DB_months_selected(self):
+        text, ok = QInputDialog.getText(self, "Message", "请输入需要导出数据的月份\n月份:",
+                                        QLineEdit.Normal, '1-{}'.format(
+                                            self.get_month()[0]))
+        if ok and text != '':
+            ids = self.export_get_months_IDs(text)
+            # todo 待完善
+            print(ids)
+        else:
+            pass
+            # box = QMessageBox()
+            # box.information(self, 'Message', '已取消~')
+
     def get_month(self):
         """
-        renturn now month just like 4 (means:APRIL)
+        renturn [month_id, month_en, month_cn]
         """
         now = datetime.datetime.now()
-        return now.month
+        month_en_list = [
+            'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP',
+            'OCT', 'NOV', 'DEC'
+        ]
+        month_cn_list = [
+            '一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月',
+            '十二月'
+        ]
+        month_id = int(now.month)
+        month_en = month_en_list[month_id - 1]
+        month_cn = month_cn_list[month_id - 1]
+        return month_id, month_en, month_cn
 
     def update_info(self):
         # 更新用户信息，包括年度总额，剩余总额和历史记录
@@ -188,9 +227,10 @@ class AccountBook(QMainWindow):
         else:
             print("There's no db.sqlite file exists!")
 
-    def submit_Value_Check(self, submit_value, month_now, monthly, remain):
+    def submit_Value_Check(self, submit_value, monthly, remain):
         # 用来检查当前输入值是否过大（最大只能超前一个月领取）
-        remain_update_minimum = monthly * (12 - month_now - self.over_months)
+        remain_update_minimum = monthly * (
+            12 - self.get_month()[0] - self.over_months)
         if remain - submit_value >= remain_update_minimum:
             return True
         else:
@@ -203,12 +243,6 @@ class AccountBook(QMainWindow):
             if re.findall(r'^\d+\.?$', submit_str):
                 submit_value = int(self.ui.submit_lineEdit.text())
                 if submit_value:
-                    month_id = self.get_month()
-                    months = [
-                        'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG',
-                        'SEP', 'OCT', 'NOV', 'DEC'
-                    ]
-                    month = months[month_id - 1]
                     # 先判断数据提交后资金提取值是否过大，只能按照最大超前一个月提取交通费，不然给与提醒后再添加
                     conn = sqlite3.connect('db.sqlite')
                     cursor = conn.cursor()
@@ -222,16 +256,15 @@ class AccountBook(QMainWindow):
                             remain = info[1]
                     else:
                         pass
-                    if self.submit_Value_Check(submit_value, month_id, monthly,
-                                               remain):
+                    if self.submit_Value_Check(submit_value, monthly, remain):
                         # 更新数据库数据
                         self.update_db(
                             name=self.name_selected,
-                            month=month,
+                            month=self.get_month()[1],
                             value=submit_value)
                         self.cancel_name = self.name_selected
                         self.cancel_value = submit_value
-                        self.cancel_month = month
+                        self.cancel_month = self.get_month()[1]
                         self.cancel_count = 1
                         box = QMessageBox()
                         box.information(self, 'Message', '提交成功')
@@ -246,11 +279,11 @@ class AccountBook(QMainWindow):
                             # 更新数据库数据
                             self.update_db(
                                 name=self.name_selected,
-                                month=month,
+                                month=self.get_month()[1],
                                 value=submit_value)
                             self.cancel_name = self.name_selected
                             self.cancel_value = submit_value
-                            self.cancel_month = month
+                            self.cancel_month = self.get_month()[1]
                             self.cancel_count = 1
                             box = QMessageBox()
                             box.information(self, 'Message', '提交成功')
@@ -409,7 +442,6 @@ class AccountBook(QMainWindow):
 
 
 if __name__ == "__main__":
-    import sys
     app = QApplication(sys.argv)
     MainWindow = AccountBook()
     sys.exit(app.exec_())
