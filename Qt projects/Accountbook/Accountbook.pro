@@ -34,8 +34,7 @@ HEADERS += \
     exportwindow.h
 
 FORMS += \
-        mainwindow.ui \
-    exportwindow.ui
+        mainwindow.ui
 
 DISTFILES += \
     ExportSelectWindow.py
