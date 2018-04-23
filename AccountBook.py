@@ -7,15 +7,17 @@
 #        Author: Jase Chen
 #         Email: xxmm@live.cn
 #      HomePage: http://jase.im/
-#       Version: 0.0.1
-#    LastChange: 2018-04-21 20:56:09
+#       Version: 1.0.0
+#    LastChange: 2018-4-23 22:58:01
 #       History:
 # =============================================================================
 '''
 from mainwindow import Ui_MainWindow
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QApplication, QInputDialog, QLineEdit
 import sqlite3
+import logging
 import xlrd
+import xlwt
 import os
 import datetime
 import re
@@ -72,35 +74,92 @@ class AccountBook(QMainWindow):
         # 增加新员工按钮
         self.ui.addStaff_pushButton.clicked.connect(
             self.addStaff_PushButtonClicked)
-        # 点击输出按钮然后弹出选择需要导出的时间以及人员
-        self.ui.export_pushButton.clicked.connect(
-            self.export_DB_months_selected)
+        # 点击输出按钮然后确定导出
+        self.ui.export_pushButton.clicked.connect(self.export_DB_months_all)
+        # Create the Logger
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
 
+        # Create the Handler for logging data to a file
+        logger_handler = logging.FileHandler('logging.log')
+        logger_handler.setLevel(logging.DEBUG)
+
+        # Create a Formatter for formatting the log messages
+        logger_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+        # Add the Formatter to the Handler
+        logger_handler.setFormatter(logger_formatter)
+
+        # Add the Handler to the Logger
+        self.logger.addHandler(logger_handler)
+        # self.logger.info('Completed configuring logger()!')
         self.show()
 
-    def export_get_months_IDs(self, text):
+    def export_get_months_bool_IDs(self, text):
+        # return: [bool, IDs_list]
+        # 返回bool: 月份是否为完整，还是只是挑选个别月份数据, 完整的话输出整个表格(DATASHEET), 否则输出选择月份的数据(不包含总额，总提取额等数据)
         # 输入包含月份的字符串，例如：‘1-3 5-7,9 2-4  6, 1-8’
         IDs_groups = re.findall(r'(\d+\-\d+)|(\d+)', text)
         IDs_list_str = []
+        IDs_set = set()
+        IDs_list = []
+        isFull_IDs = True
+
+        def full_months():
+            full_IDs = []
+            for i in range(1, self.get_month()[0] + 1):
+                full_IDs.append(i)
+            return full_IDs
+
         for i in IDs_groups:
             for j in i:
                 if j:
                     IDs_list_str.append(j)
-        # 返回例如：['1-3', '5-7', '9', '2-4', '6', '1-8']
-        return IDs_list_str
+        # IDs_list_str: ['1-3', '5-7', '9', '2-4', '6', '1-8']
+        for item in IDs_list_str:
+            if re.findall(r'\-', item):
+                id1 = re.findall(r'^\d+', item)[0]
+                id2 = re.findall(r'\d+$', item)[0]
+                # 检测月份区间的表达是否正确以及id2是否大于当前月份
+                if int(id2) >= int(id1) and int(id2) <= self.get_month()[0]:
+                    for i in range(int(id1), int(id2) + 1):
+                        IDs_set.add(i)
+            else:
+                IDs_set.add(int(item))
+        for i in IDs_set:
+            IDs_list.append(i)
+        # 判断选择是否为完整月份清单
+        if full_months() != IDs_list:
+            isFull_IDs = False
+        return isFull_IDs, IDs_list
 
+    # 修改为导出全部数据，此段未用
     def export_DB_months_selected(self):
-        text, ok = QInputDialog.getText(self, "Message", "请输入需要导出数据的月份\n月份:",
-                                        QLineEdit.Normal, '1-{}'.format(
-                                            self.get_month()[0]))
-        if ok and text != '':
-            ids = self.export_get_months_IDs(text)
-            # todo 待完善
-            print(ids)
+        if self.sqlite_exist():
+            text, ok = QInputDialog.getText(self, "Message",
+                                            "请输入需要导出数据的月份\n月份:",
+                                            QLineEdit.Normal, '1-{}'.format(
+                                                self.get_month()[0]))
+            if ok and text != '':
+                export_months_list = self.export_get_months_bool_IDs(text)
+                # todo 待完善
+                print(export_months_list)
+                # 如果输出整张表格
+                if export_months_list[0]:
+                    self.export_DB_months_all()
+                    box = QMessageBox()
+                    box.information(self, 'Message', '数据记录表以及历史记录导出成功！')
+                    pass
+                # 输出指定月份数据
+                else:
+                    pass
+            else:
+                pass
+                # box = QMessageBox()
+                # box.information(self, 'Message', '已取消~')
         else:
-            pass
-            # box = QMessageBox()
-            # box.information(self, 'Message', '已取消~')
+            box = QMessageBox()
+            box.information(self, 'Message', '请先初始化员工数据')
 
     def get_month(self):
         """
@@ -119,6 +178,75 @@ class AccountBook(QMainWindow):
         month_en = month_en_list[month_id - 1]
         month_cn = month_cn_list[month_id - 1]
         return month_id, month_en, month_cn
+
+    def export_DB_months_all(self):
+        msgBox = QMessageBox(QMessageBox.Warning, "Message", '需要导出数据吗？',
+                             QMessageBox.NoButton, self)
+        msgBox.addButton("Yes!", QMessageBox.AcceptRole)
+        msgBox.addButton("No", QMessageBox.RejectRole)
+        if msgBox.exec_() == QMessageBox.AcceptRole:
+            # 创建表格Excel
+            workbook = xlwt.Workbook(encoding='utf-8')
+            worksheet = workbook.add_sheet('DATASHEET')
+            # 写入excel
+            # 参数对应 行, 列, 值
+            # 写入标题栏
+            worksheet.write(0, 0, label='序号')
+            worksheet.write(0, 1, label='姓名')
+            worksheet.write(0, 2, label='1月')
+            worksheet.write(0, 3, label='2月')
+            worksheet.write(0, 4, label='3月')
+            worksheet.write(0, 5, label='4月')
+            worksheet.write(0, 6, label='5月')
+            worksheet.write(0, 7, label='6月')
+            worksheet.write(0, 8, label='7月')
+            worksheet.write(0, 9, label='8月')
+            worksheet.write(0, 10, label='9月')
+            worksheet.write(0, 11, label='10月')
+            worksheet.write(0, 12, label='11月')
+            worksheet.write(0, 13, label='12月')
+            worksheet.write(0, 14, label='每月额度')
+            worksheet.write(0, 15, label='有效月数')
+            worksheet.write(0, 16, label='年度总额')
+            worksheet.write(0, 17, label='共支取')
+            worksheet.write(0, 18, label='年度剩余')
+            # 数据库内数据导出到Excel表格
+            conn = sqlite3.connect('db.sqlite')
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM DATASHEET")
+            infos = cursor.fetchall()
+            for info in infos:
+                for j in range(len(info)):
+                    worksheet.write(info[0], j, label=info[j])
+            # 写入操作记录信息
+            worksheet = workbook.add_sheet('HISTORY')
+            # 写入excel
+            # 参数对应 行, 列, 值
+            # 写入标题栏
+            worksheet.write(0, 0, label='序号')
+            worksheet.write(0, 1, label='时间')
+            worksheet.write(0, 2, label='姓名')
+            worksheet.write(0, 3, label='提交金额')
+            worksheet.write(0, 4, label='共支取')
+            worksheet.write(0, 5, label='年度剩余')
+            # 数据库内数据导出到Excel表格
+            cursor.execute("SELECT * FROM HISTORY")
+            infos = cursor.fetchall()
+            for info in infos:
+                for j in range(len(info)):
+                    worksheet.write(info[0], j, label=info[j])
+            cursor.close()
+            conn.close()
+
+            updatetime_str = datetime.datetime.now().strftime(
+                "%Y-%m-%d %H-%M-%S")
+            export_file_name = '交通费提取记录%s.xls' % (updatetime_str)
+            workbook.save(export_file_name)
+            QMessageBox.information(self, "Message",
+                                    '数据已导出!  详见:\n{}'.format(export_file_name))
+            print('Export DATASHEET and HISTORY to excel file succeed')
+        else:
+            pass
 
     def update_info(self):
         # 更新用户信息，包括年度总额，剩余总额和历史记录
@@ -149,8 +277,9 @@ class AccountBook(QMainWindow):
         if infos:
             history_text_list = []
             for info in infos:
-                string = str(info[0]) + ":于" + str(info[1]) + ' 提交:' + str(
-                    info[2]) + ' 共支取:' + str(info[3]) + ' 剩余:' + str(info[4])
+                string = str(info[0]) + ":于" + str(info[1]) + ', 提交:' + str(
+                    info[2]) + ', 共支取:' + str(info[3]) + ', 剩余:' + str(
+                        info[4])
                 history_text_list.append(string)
             history_text_list_reversed = history_text_list[::-1]
             print(history_text_list_reversed)
@@ -166,8 +295,7 @@ class AccountBook(QMainWindow):
         conn = sqlite3.connect('db.sqlite')
         cursor = conn.cursor()
         # 获取现在数据库内数据
-        sql = "SELECT " + month + \
-            ", EXTRACTED, REMAIN FROM DATASHEET WHERE NAME = '" + name + "'"
+        sql = "SELECT " + month + ", EXTRACTED, REMAIN FROM DATASHEET WHERE NAME = '" + name + "'"
         cursor.execute(sql)
         datas = cursor.fetchall()
         for data in datas:
