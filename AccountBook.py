@@ -14,8 +14,10 @@
 '''
 from mainwindow import Ui_MainWindow
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QApplication, QInputDialog, QLineEdit
+from PyQt5 import QtGui
+from PyQt5.QtGui import QIcon, QPixmap
 import sqlite3
-import logging
+# import logging
 import xlrd
 import xlwt
 import os
@@ -23,6 +25,9 @@ import datetime
 import re
 import sys
 from platform import platform
+from logo import img as logo_img
+from icon import img as icon_img
+import base64
 
 
 class AccountBook(QMainWindow):
@@ -76,23 +81,39 @@ class AccountBook(QMainWindow):
             self.addStaff_PushButtonClicked)
         # 点击输出按钮然后确定导出
         self.ui.export_pushButton.clicked.connect(self.export_DB_months_all)
-        # Create the Logger
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.DEBUG)
+        # # Create the Logger
+        # self.logger = logging.getLogger(__name__)
+        # self.logger.setLevel(logging.DEBUG)
 
-        # Create the Handler for logging data to a file
-        logger_handler = logging.FileHandler('logging.log')
-        logger_handler.setLevel(logging.DEBUG)
+        # # Create the Handler for logging data to a file
+        # logger_handler = logging.FileHandler('logging.log')
+        # logger_handler.setLevel(logging.DEBUG)
 
-        # Create a Formatter for formatting the log messages
-        logger_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        # # Create a Formatter for formatting the log messages
+        # logger_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-        # Add the Formatter to the Handler
-        logger_handler.setFormatter(logger_formatter)
+        # # Add the Formatter to the Handler
+        # logger_handler.setFormatter(logger_formatter)
 
-        # Add the Handler to the Logger
-        self.logger.addHandler(logger_handler)
+        # # Add the Handler to the Logger
+        # self.logger.addHandler(logger_handler)
         # self.logger.info('Completed configuring logger()!')
+
+        # display the logo in the app
+        # self.ui.logo_label.setPixmap(QPixmap(basedir+"D:\\code\\AccountBook\\logo.png"))
+        tmp_logo = open("logo.png", "wb+")
+        tmp_icon = open("icon.ico", "wb+")
+        tmp_logo.write(base64.b64decode(logo_img))
+        tmp_icon.write(base64.b64decode(icon_img))
+        tmp_icon.close()
+        tmp_logo.close()
+        self.ui.logo_label.setPixmap(QPixmap("logo.png"))
+        # 设置程序运行时的图标
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap('icon.ico'), QtGui.QIcon.Normal)
+        self.setWindowIcon(icon)
+        os.remove('logo.png')
+        os.remove('icon.ico')
         self.show()
 
     def export_get_months_bool_IDs(self, text):

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>650</width>
-    <height>420</height>
+    <height>480</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,17 +19,20 @@
   <property name="minimumSize">
    <size>
     <width>650</width>
-    <height>420</height>
+    <height>480</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>650</width>
-    <height>420</height>
+    <height>480</height>
    </size>
   </property>
   <property name="windowTitle">
    <string>AccountBook</string>
+  </property>
+  <property name="dockNestingEnabled">
+   <bool>true</bool>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -38,13 +41,13 @@
       <property name="minimumSize">
        <size>
         <width>0</width>
-        <height>30</height>
+        <height>46</height>
        </size>
       </property>
       <property name="maximumSize">
        <size>
         <width>16777215</width>
-        <height>30</height>
+        <height>46</height>
        </size>
       </property>
       <property name="autoFillBackground">
@@ -60,12 +63,34 @@
        <number>0</number>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_4">
-       <property name="topMargin">
+       <property name="spacing">
         <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>9</number>
        </property>
        <property name="bottomMargin">
         <number>0</number>
        </property>
+       <item>
+        <widget class="QLabel" name="logo_label">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>142</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>zhiye_logo.png</string>
+         </property>
+        </widget>
+       </item>
        <item>
         <widget class="QLabel" name="ltitle_label">
          <property name="sizePolicy">
@@ -83,7 +108,7 @@
           <bool>false</bool>
          </property>
          <property name="text">
-          <string>______交通费报销登记系统</string>
+          <string>百联置业交通费报销登记系统</string>
          </property>
          <property name="scaledContents">
           <bool>false</bool>
@@ -111,6 +136,9 @@
        <number>0</number>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
        <item>
         <widget class="QFrame" name="name_frame">
          <property name="maximumSize">
@@ -397,6 +425,43 @@
            </widget>
           </item>
          </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QFrame" name="frame">
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Plain</enum>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="author_label">
+         <property name="maximumSize">
+          <size>
+           <width>166666</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="layoutDirection">
+          <enum>Qt::LeftToRight</enum>
+         </property>
+         <property name="text">
+          <string>by Jase Chen  </string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
         </widget>
        </item>
       </layout>
