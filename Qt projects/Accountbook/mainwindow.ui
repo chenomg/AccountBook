@@ -89,6 +89,15 @@
          <property name="text">
           <string>zhiye_logo.png</string>
          </property>
+         <property name="openExternalLinks">
+          <bool>false</bool>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::NoTextInteraction</set>
+         </property>
+         <property name="buddy">
+          <cstring></cstring>
+         </property>
         </widget>
        </item>
        <item>
@@ -108,7 +117,7 @@
           <bool>false</bool>
          </property>
          <property name="text">
-          <string>百联置业交通费报销登记系统</string>
+          <string>百联置业交通费报销登记系统      </string>
          </property>
          <property name="scaledContents">
           <bool>false</bool>

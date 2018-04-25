@@ -101,19 +101,19 @@ class AccountBook(QMainWindow):
 
         # display the logo in the app
         # self.ui.logo_label.setPixmap(QPixmap(basedir+"D:\\code\\AccountBook\\logo.png"))
-        tmp_logo = open("logo.png", "wb+")
-        tmp_icon = open("icon.ico", "wb+")
+        tmp_logo = open("tmp_logo.png", "wb+")
+        tmp_icon = open("tmp_icon.ico", "wb+")
         tmp_logo.write(base64.b64decode(logo_img))
         tmp_icon.write(base64.b64decode(icon_img))
         tmp_icon.close()
         tmp_logo.close()
-        self.ui.logo_label.setPixmap(QPixmap("logo.png"))
+        self.ui.logo_label.setPixmap(QPixmap("tmp_logo.png"))
         # 设置程序运行时的图标
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap('icon.ico'), QtGui.QIcon.Normal)
+        icon.addPixmap(QtGui.QPixmap('tmp_icon.ico'), QtGui.QIcon.Normal)
         self.setWindowIcon(icon)
-        os.remove('logo.png')
-        os.remove('icon.ico')
+        os.remove('tmp_logo.png')
+        os.remove('tmp_icon.ico')
         self.show()
 
     def export_get_months_bool_IDs(self, text):
@@ -201,73 +201,77 @@ class AccountBook(QMainWindow):
         return month_id, month_en, month_cn
 
     def export_DB_months_all(self):
-        msgBox = QMessageBox(QMessageBox.Warning, "Message", '需要导出数据吗？',
-                             QMessageBox.NoButton, self)
-        msgBox.addButton("Yes!", QMessageBox.AcceptRole)
-        msgBox.addButton("No", QMessageBox.RejectRole)
-        if msgBox.exec_() == QMessageBox.AcceptRole:
-            # 创建表格Excel
-            workbook = xlwt.Workbook(encoding='utf-8')
-            worksheet = workbook.add_sheet('DATASHEET')
-            # 写入excel
-            # 参数对应 行, 列, 值
-            # 写入标题栏
-            worksheet.write(0, 0, label='序号')
-            worksheet.write(0, 1, label='姓名')
-            worksheet.write(0, 2, label='1月')
-            worksheet.write(0, 3, label='2月')
-            worksheet.write(0, 4, label='3月')
-            worksheet.write(0, 5, label='4月')
-            worksheet.write(0, 6, label='5月')
-            worksheet.write(0, 7, label='6月')
-            worksheet.write(0, 8, label='7月')
-            worksheet.write(0, 9, label='8月')
-            worksheet.write(0, 10, label='9月')
-            worksheet.write(0, 11, label='10月')
-            worksheet.write(0, 12, label='11月')
-            worksheet.write(0, 13, label='12月')
-            worksheet.write(0, 14, label='每月额度')
-            worksheet.write(0, 15, label='有效月数')
-            worksheet.write(0, 16, label='年度总额')
-            worksheet.write(0, 17, label='共支取')
-            worksheet.write(0, 18, label='年度剩余')
-            # 数据库内数据导出到Excel表格
-            conn = sqlite3.connect('db.sqlite')
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM DATASHEET")
-            infos = cursor.fetchall()
-            for info in infos:
-                for j in range(len(info)):
-                    worksheet.write(info[0], j, label=info[j])
-            # 写入操作记录信息
-            worksheet = workbook.add_sheet('HISTORY')
-            # 写入excel
-            # 参数对应 行, 列, 值
-            # 写入标题栏
-            worksheet.write(0, 0, label='序号')
-            worksheet.write(0, 1, label='时间')
-            worksheet.write(0, 2, label='姓名')
-            worksheet.write(0, 3, label='提交金额')
-            worksheet.write(0, 4, label='共支取')
-            worksheet.write(0, 5, label='年度剩余')
-            # 数据库内数据导出到Excel表格
-            cursor.execute("SELECT * FROM HISTORY")
-            infos = cursor.fetchall()
-            for info in infos:
-                for j in range(len(info)):
-                    worksheet.write(info[0], j, label=info[j])
-            cursor.close()
-            conn.close()
-
-            updatetime_str = datetime.datetime.now().strftime(
-                "%Y-%m-%d %H-%M-%S")
-            export_file_name = '交通费提取记录%s.xls' % (updatetime_str)
-            workbook.save(export_file_name)
-            QMessageBox.information(self, "Message",
-                                    '数据已导出!  详见:\n{}'.format(export_file_name))
-            print('Export DATASHEET and HISTORY to excel file succeed')
+        if self.sqlite_exist():
+            msgBox = QMessageBox(QMessageBox.Warning, "Message", '需要导出数据吗？',
+                                 QMessageBox.NoButton, self)
+            msgBox.addButton("Yes!", QMessageBox.AcceptRole)
+            msgBox.addButton("No", QMessageBox.RejectRole)
+            if msgBox.exec_() == QMessageBox.AcceptRole:
+                # 创建表格Excel
+                workbook = xlwt.Workbook(encoding='utf-8')
+                worksheet = workbook.add_sheet('DATASHEET')
+                # 写入excel
+                # 参数对应 行, 列, 值
+                # 写入标题栏
+                worksheet.write(0, 0, label='序号')
+                worksheet.write(0, 1, label='姓名')
+                worksheet.write(0, 2, label='1月')
+                worksheet.write(0, 3, label='2月')
+                worksheet.write(0, 4, label='3月')
+                worksheet.write(0, 5, label='4月')
+                worksheet.write(0, 6, label='5月')
+                worksheet.write(0, 7, label='6月')
+                worksheet.write(0, 8, label='7月')
+                worksheet.write(0, 9, label='8月')
+                worksheet.write(0, 10, label='9月')
+                worksheet.write(0, 11, label='10月')
+                worksheet.write(0, 12, label='11月')
+                worksheet.write(0, 13, label='12月')
+                worksheet.write(0, 14, label='每月额度')
+                worksheet.write(0, 15, label='有效月数')
+                worksheet.write(0, 16, label='年度总额')
+                worksheet.write(0, 17, label='共支取')
+                worksheet.write(0, 18, label='年度剩余')
+                # 数据库内数据导出到Excel表格
+                conn = sqlite3.connect('db.sqlite')
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM DATASHEET")
+                infos = cursor.fetchall()
+                for info in infos:
+                    for j in range(len(info)):
+                        worksheet.write(info[0], j, label=info[j])
+                # 写入操作记录信息
+                worksheet = workbook.add_sheet('HISTORY')
+                # 写入excel
+                # 参数对应 行, 列, 值
+                # 写入标题栏
+                worksheet.write(0, 0, label='序号')
+                worksheet.write(0, 1, label='时间')
+                worksheet.write(0, 2, label='姓名')
+                worksheet.write(0, 3, label='提交金额')
+                worksheet.write(0, 4, label='共支取')
+                worksheet.write(0, 5, label='年度剩余')
+                # 数据库内数据导出到Excel表格
+                cursor.execute("SELECT * FROM HISTORY")
+                infos = cursor.fetchall()
+                for info in infos:
+                    for j in range(len(info)):
+                        worksheet.write(info[0], j, label=info[j])
+                cursor.close()
+                conn.close()
+                updatetime_str = datetime.datetime.now().strftime(
+                    "%Y-%m-%d %H-%M-%S")
+                export_file_name = '交通费提取记录%s.xls' % (updatetime_str)
+                workbook.save(export_file_name)
+                QMessageBox.information(
+                    self, "Message",
+                    '数据已导出!  详见:\n{}'.format(export_file_name))
+                print('Export DATASHEET and HISTORY to excel file succeed')
+            else:
+                pass
         else:
-            pass
+            box = QMessageBox()
+            box.information(self, 'Message', '无数据！')
 
     def update_info(self):
         # 更新用户信息，包括年度总额，剩余总额和历史记录
@@ -515,62 +519,66 @@ class AccountBook(QMainWindow):
         """
         根据表格内容创建数据库
         """
-        # 创建员工信息表
-        filename = 'data.xls'
-        data = xlrd.open_workbook(filename)
-        conn = sqlite3.connect('db.sqlite')
-        conn.execute(u'''CREATE TABLE DATASHEET(
-            ID INT PRIMARY KEY NOT NULL,
-            NAME CHAR(10) NOT NULL,
-            JAN INT,
-            FEB INT,
-            MAR INT,
-            APR INT,
-            MAY INT,
-            JUN INT,
-            JUL INT,
-            AUG INT,
-            SEP INT,
-            OCT INT,
-            NOV INT,
-            DEC INT,
-            MONTHLY INT NOT NULL,
-            MONTHS INT NOT NULL,
-            TOTAL INT NOT NULL,
-            EXTRACTED INT NOT NULL,
-            REMAIN INT NOT NULL);''')
-        table = data.sheets()[0]
-        nrows = table.nrows
-        for i in range(nrows - 1):
-            insertDatas = table.row_values(i + 1)
-            conn.execute('''INSERT INTO DATASHEET(
-            ID,NAME,JAN,FEB,MAR,APR,MAY,JUN,JUL,AUG,SEP,OCT,NOV,DEC,MONTHLY,MONTHS,TOTAL,EXTRACTED,REMAIN
-            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                         (insertDatas))
-        conn.commit()
-        conn.close()
-        # 创建操作记录数据库记录表
-        conn = sqlite3.connect('db.sqlite')
-        conn.execute(u'''CREATE TABLE HISTORY(
-            ID INT PRIMARY KEY NOT NULL,
-            UPDATETIME CHAR(30),
-            NAME CHAR(10),
-            SUBMIT INT,
-            EXTRACTED_UPDATE INT,
-            REMAIN_UPDATE INT);''')
-        conn.commit()
-        conn.close()
-        # 初始化按钮不可用
-        self.ui.init_pushButton.setEnabled(False)
-        self.show_Name_listWidge()
-        if re.findall(r'^windows.*', self.Platform, re.I):
-            import win32con
-            import win32api
-            # 隐藏数据库文件
-            win32api.SetFileAttributes('db.sqlite',
-                                       win32con.FILE_ATTRIBUTE_HIDDEN)
+        if self.data_xls_exist():
+            # 创建员工信息表
+            filename = 'data.xls'
+            data = xlrd.open_workbook(filename)
+            conn = sqlite3.connect('db.sqlite')
+            conn.execute(u'''CREATE TABLE DATASHEET(
+                ID INT PRIMARY KEY NOT NULL,
+                NAME CHAR(10) NOT NULL,
+                JAN INT,
+                FEB INT,
+                MAR INT,
+                APR INT,
+                MAY INT,
+                JUN INT,
+                JUL INT,
+                AUG INT,
+                SEP INT,
+                OCT INT,
+                NOV INT,
+                DEC INT,
+                MONTHLY INT NOT NULL,
+                MONTHS INT NOT NULL,
+                TOTAL INT NOT NULL,
+                EXTRACTED INT NOT NULL,
+                REMAIN INT NOT NULL);''')
+            table = data.sheets()[0]
+            nrows = table.nrows
+            for i in range(nrows - 1):
+                insertDatas = table.row_values(i + 1)
+                conn.execute('''INSERT INTO DATASHEET(
+                ID,NAME,JAN,FEB,MAR,APR,MAY,JUN,JUL,AUG,SEP,OCT,NOV,DEC,MONTHLY,MONTHS,TOTAL,EXTRACTED,REMAIN
+                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                             (insertDatas))
+            conn.commit()
+            conn.close()
+            # 创建操作记录数据库记录表
+            conn = sqlite3.connect('db.sqlite')
+            conn.execute(u'''CREATE TABLE HISTORY(
+                ID INT PRIMARY KEY NOT NULL,
+                UPDATETIME CHAR(30),
+                NAME CHAR(10),
+                SUBMIT INT,
+                EXTRACTED_UPDATE INT,
+                REMAIN_UPDATE INT);''')
+            conn.commit()
+            conn.close()
+            # 初始化按钮不可用
+            self.ui.init_pushButton.setEnabled(False)
+            self.show_Name_listWidge()
+            if re.findall(r'^windows.*', self.Platform, re.I):
+                import win32con
+                import win32api
+                # 隐藏数据库文件
+                win32api.SetFileAttributes('db.sqlite',
+                                           win32con.FILE_ATTRIBUTE_HIDDEN)
+            else:
+                pass
         else:
-            pass
+            box = QMessageBox()
+            box.information(self, 'Message', '未找到员工信息文件:\ndata.xls')
 
     def get_Name_List(self):
         conn = sqlite3.connect('db.sqlite')
@@ -585,6 +593,16 @@ class AccountBook(QMainWindow):
         for f in file_list:
             if not os.path.isdir(f):
                 if f == 'db.sqlite':
+                    return True
+        else:
+            return False
+
+    def data_xls_exist(self):
+        path = os.getcwd()
+        file_list = os.listdir(path)
+        for f in file_list:
+            if not os.path.isdir(f):
+                if f == 'data.xls':
                     return True
         else:
             return False

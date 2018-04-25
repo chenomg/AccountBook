@@ -41,6 +41,8 @@ class Ui_MainWindow(object):
         self.logo_label = QtWidgets.QLabel(self.title_frame)
         self.logo_label.setMinimumSize(QtCore.QSize(0, 0))
         self.logo_label.setMaximumSize(QtCore.QSize(142, 16777215))
+        self.logo_label.setOpenExternalLinks(False)
+        self.logo_label.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
         self.logo_label.setObjectName("logo_label")
         self.horizontalLayout_4.addWidget(self.logo_label)
         self.ltitle_label = QtWidgets.QLabel(self.title_frame)
@@ -241,7 +243,7 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "AccountBook"))
         self.logo_label.setText(_translate("MainWindow", "zhiye_logo.png"))
-        self.ltitle_label.setText(_translate("MainWindow", "百联置业交通费报销登记系统"))
+        self.ltitle_label.setText(_translate("MainWindow", "百联置业交通费报销登记系统      "))
         self.name_label.setText(_translate("MainWindow", "请选择员工"))
         self.name_listWidget.setSortingEnabled(True)
         self.now_label.setText(_translate("MainWindow", "本次报销(元)："))
