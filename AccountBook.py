@@ -285,7 +285,7 @@ class AccountBook(QMainWindow):
                 self.total_selected = info[0]
                 self.remain_selected = info[1]
                 self.ui.yearly_lineEdit.setText(str(self.total_selected))
-                self.ui.remain_lineEdit.setText(str(self.remain_selected))
+                self.ui.remain_lineEdit.setText(str(round(self.remain_selected, 2)))
         else:
             self.ui.yearly_lineEdit.setText('0')
             self.ui.remain_lineEdit.setText('0')
@@ -304,7 +304,7 @@ class AccountBook(QMainWindow):
             for info in infos:
                 string = str(info[0]) + ":于" + str(info[1]) + ', 提交:' + str(
                     info[2]) + ', 共支取:' + str(info[3]) + ', 剩余:' + str(
-                        info[4])
+                        round(info[4], 2))
                 history_text_list.append(string)
             history_text_list_reversed = history_text_list[::-1]
             print(history_text_list_reversed)
@@ -393,8 +393,8 @@ class AccountBook(QMainWindow):
         # 提交按钮
         if self.name_selected:
             submit_str = self.ui.submit_lineEdit.text()
-            if re.findall(r'^\d+\.?$', submit_str):
-                submit_value = int(self.ui.submit_lineEdit.text())
+            if re.findall(r'^\w*\.?\w*$', submit_str):
+                submit_value = float(self.ui.submit_lineEdit.text())
                 if submit_value:
                     # 先判断数据提交后资金提取值是否过大，只能按照最大超前一个月提取交通费，不然给与提醒后再添加
                     conn = sqlite3.connect('db.sqlite')
@@ -451,7 +451,7 @@ class AccountBook(QMainWindow):
                     box.information(self, 'Message', '请输入数据')
             else:
                 box = QMessageBox()
-                box.information(self, 'Message', '请检查数据是否正确!\n请输入整数。。。')
+                box.information(self, 'Message', '请检查数据是否正确!。。。')
         else:
             box = QMessageBox()
             box.information(self, 'Message', '请选择员工进行操作！')
@@ -527,23 +527,23 @@ class AccountBook(QMainWindow):
             conn.execute(u'''CREATE TABLE DATASHEET(
                 ID INT PRIMARY KEY NOT NULL,
                 NAME CHAR(10) NOT NULL,
-                JAN INT,
-                FEB INT,
-                MAR INT,
-                APR INT,
-                MAY INT,
-                JUN INT,
-                JUL INT,
-                AUG INT,
-                SEP INT,
-                OCT INT,
-                NOV INT,
-                DEC INT,
-                MONTHLY INT NOT NULL,
-                MONTHS INT NOT NULL,
-                TOTAL INT NOT NULL,
-                EXTRACTED INT NOT NULL,
-                REMAIN INT NOT NULL);''')
+                JAN FLOAT,
+                FEB FLOAT,
+                MAR FLOAT,
+                APR FLOAT,
+                MAY FLOAT,
+                JUN FLOAT,
+                JUL FLOAT,
+                AUG FLOAT,
+                SEP FLOAT,
+                OCT FLOAT,
+                NOV FLOAT,
+                DEC FLOAT,
+                MONTHLY FLOAT NOT NULL,
+                MONTHS FLOAT NOT NULL,
+                TOTAL FLOAT NOT NULL,
+                EXTRACTED FLOAT NOT NULL,
+                REMAIN FLOAT NOT NULL);''')
             table = data.sheets()[0]
             nrows = table.nrows
             for i in range(nrows - 1):
@@ -560,9 +560,9 @@ class AccountBook(QMainWindow):
                 ID INT PRIMARY KEY NOT NULL,
                 UPDATETIME CHAR(30),
                 NAME CHAR(10),
-                SUBMIT INT,
-                EXTRACTED_UPDATE INT,
-                REMAIN_UPDATE INT);''')
+                SUBMIT FLOAT,
+                EXTRACTED_UPDATE FLOAT,
+                REMAIN_UPDATE FLOAT);''')
             conn.commit()
             conn.close()
             # 初始化按钮不可用
