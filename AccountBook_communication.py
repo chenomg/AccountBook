@@ -262,7 +262,7 @@ class AccountBook_comm(QMainWindow):
                 conn.close()
                 updatetime_str = datetime.datetime.now().strftime(
                     "%Y-%m-%d %H-%M-%S")
-                export_file_name = '交通费提取记录%s.xls' % (updatetime_str)
+                export_file_name = '通讯费提取记录%s.xls' % (updatetime_str)
                 workbook.save(export_file_name)
                 QMessageBox.information(
                     self, "Message",
