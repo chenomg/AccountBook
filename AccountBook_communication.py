@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 '''
 # =============================================================================
-#      FileName: AccountBook.py
+#      FileName: AccountBook_communication.py
 #          Desc: use to record the account
 #        Author: Jase Chen
 #         Email: xxmm@live.cn
@@ -30,7 +30,7 @@ from icon import img as icon_img
 import base64
 
 
-class AccountBook(QMainWindow):
+class AccountBook_comm(QMainWindow):
     def __init__(self):
         super().__init__()
         # 设置初始数值
@@ -55,6 +55,7 @@ class AccountBook(QMainWindow):
         self.ui.yearly_lineEdit.setText(str(self.total_selected))
         self.ui.remain_lineEdit.setText(str(self.remain_selected))
         self.ui.submit_lineEdit.setText(str(self.submit_value))
+        self.ui.ltitle_label.setText("百联置业报销登记系统 - 通讯费       ")
 
         # 检测是否存在db.sqlit不存在的话则按下初始化按钮后根据表格创建数据库
         if not self.sqlite_exist():
@@ -233,7 +234,7 @@ class AccountBook(QMainWindow):
                 worksheet.write(0, 17, label='共支取')
                 worksheet.write(0, 18, label='年度剩余')
                 # 数据库内数据导出到Excel表格
-                conn = sqlite3.connect('db.sqlite')
+                conn = sqlite3.connect('db_communication.sqlite')
                 cursor = conn.cursor()
                 cursor.execute("SELECT * FROM DATASHEET")
                 infos = cursor.fetchall()
@@ -275,7 +276,7 @@ class AccountBook(QMainWindow):
 
     def update_info(self):
         # 更新用户信息，包括年度总额，剩余总额和历史记录
-        conn = sqlite3.connect('db.sqlite')
+        conn = sqlite3.connect('db_communication.sqlite')
         cursor = conn.cursor()
         cursor.execute("SELECT TOTAL, REMAIN FROM DATASHEET WHERE NAME=?",
                        (self.name_selected, ))
@@ -303,7 +304,7 @@ class AccountBook(QMainWindow):
             history_text_list = []
             for info in infos:
                 string = str(info[0]) + ":于" + str(info[1]) + ', 提交:' + str(
-                    info[2]) + ', 共支取:' + str(info[3]) + ', 剩余:' + str(
+                    info[2]) + ', 共支取:' + str(round(info[3], 2)) + ', 剩余:' + str(
                         round(info[4], 2))
                 history_text_list.append(string)
             history_text_list_reversed = history_text_list[::-1]
@@ -317,7 +318,7 @@ class AccountBook(QMainWindow):
 
     def update_db(self, name, month, value):
         # 更新数据库数据
-        conn = sqlite3.connect('db.sqlite')
+        conn = sqlite3.connect('db_communication.sqlite')
         cursor = conn.cursor()
         # 获取现在数据库内数据
         sql = "SELECT " + month + ", EXTRACTED, REMAIN FROM DATASHEET WHERE NAME = '" + name + "'"
@@ -339,7 +340,7 @@ class AccountBook(QMainWindow):
         cursor.execute(sql2)
         conn.commit()
         # 更新历史记录
-        conn = sqlite3.connect('db.sqlite')
+        conn = sqlite3.connect('db_communication.sqlite')
         cursor = conn.cursor()
         c = cursor.execute("SELECT * FROM HISTORY")
         history_rows = len(c.fetchall())
@@ -378,7 +379,7 @@ class AccountBook(QMainWindow):
             for name in names:
                 self.ui.name_listWidget.addItem(name)
         else:
-            print("There's no db.sqlite file exists!")
+            print("There's no db_communication.sqlite file exists!")
 
     def submit_Value_Check(self, submit_value, monthly, remain):
         # 用来检查当前输入值是否过大（最大只能超前一个月领取）
@@ -393,11 +394,11 @@ class AccountBook(QMainWindow):
         # 提交按钮
         if self.name_selected:
             submit_str = self.ui.submit_lineEdit.text()
-            if re.findall(r'^\w*\.?\w*$', submit_str):
+            if re.findall(r'^\d*\.?(\d|\d\d)?$', submit_str):
                 submit_value = float(self.ui.submit_lineEdit.text())
                 if submit_value:
                     # 先判断数据提交后资金提取值是否过大，只能按照最大超前一个月提取交通费，不然给与提醒后再添加
-                    conn = sqlite3.connect('db.sqlite')
+                    conn = sqlite3.connect('db_communication.sqlite')
                     cursor = conn.cursor()
                     sql = "SELECT MONTHLY, REMAIN FROM DATASHEET WHERE NAME = '{name}'".format(
                         name=self.name_selected)
@@ -486,9 +487,9 @@ class AccountBook(QMainWindow):
         """
         # 增加新员工信息表
         if self.sqlite_exist():
-            filename = 'data.xls'
+            filename = 'data_txf.xls'
             data = xlrd.open_workbook(filename)
-            conn = sqlite3.connect('db.sqlite')
+            conn = sqlite3.connect('db_communication.sqlite')
             table = data.sheets()[0]
             nrows = table.nrows
             count = 0
@@ -519,11 +520,11 @@ class AccountBook(QMainWindow):
         """
         根据表格内容创建数据库
         """
-        if self.data_xls_exist():
+        if self.data_txf_xls_exist():
             # 创建员工信息表
-            filename = 'data.xls'
+            filename = 'data_txf.xls'
             data = xlrd.open_workbook(filename)
-            conn = sqlite3.connect('db.sqlite')
+            conn = sqlite3.connect('db_communication.sqlite')
             conn.execute(u'''CREATE TABLE DATASHEET(
                 ID INT PRIMARY KEY NOT NULL,
                 NAME CHAR(10) NOT NULL,
@@ -555,7 +556,7 @@ class AccountBook(QMainWindow):
             conn.commit()
             conn.close()
             # 创建操作记录数据库记录表
-            conn = sqlite3.connect('db.sqlite')
+            conn = sqlite3.connect('db_communication.sqlite')
             conn.execute(u'''CREATE TABLE HISTORY(
                 ID INT PRIMARY KEY NOT NULL,
                 UPDATETIME CHAR(30),
@@ -572,16 +573,16 @@ class AccountBook(QMainWindow):
                 import win32con
                 import win32api
                 # 隐藏数据库文件
-                win32api.SetFileAttributes('db.sqlite',
+                win32api.SetFileAttributes('db_communication.sqlite',
                                            win32con.FILE_ATTRIBUTE_HIDDEN)
             else:
                 pass
         else:
             box = QMessageBox()
-            box.information(self, 'Message', '未找到员工信息文件:\ndata.xls')
+            box.information(self, 'Message', '未找到员工信息文件:\ndata_txf.xls')
 
     def get_Name_List(self):
-        conn = sqlite3.connect('db.sqlite')
+        conn = sqlite3.connect('db_communication.sqlite')
         cursor = conn.cursor()
         cursor.execute('SELECT NAME FROM DATASHEET')
         names = cursor.fetchall()
@@ -592,17 +593,17 @@ class AccountBook(QMainWindow):
         file_list = os.listdir(path)
         for f in file_list:
             if not os.path.isdir(f):
-                if f == 'db.sqlite':
+                if f == 'db_communication.sqlite':
                     return True
         else:
             return False
 
-    def data_xls_exist(self):
+    def data_txf_xls_exist(self):
         path = os.getcwd()
         file_list = os.listdir(path)
         for f in file_list:
             if not os.path.isdir(f):
-                if f == 'data.xls':
+                if f == 'data_txf.xls':
                     return True
         else:
             return False
@@ -610,5 +611,5 @@ class AccountBook(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    MainWindow = AccountBook()
+    MainWindow = AccountBook_comm()
     sys.exit(app.exec_())
