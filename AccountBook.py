@@ -32,10 +32,11 @@ import base64
 
 class AccountBook(QMainWindow):
 
-    def __init__(self, db_file='db_file'):
+    def __init__(self, db_file='db_file', title='通讯费'):
         super().__init__()
         # 设置初始数值
         self.DB_FILE = db_file
+        self.TITLE = title
         self.name_selected = ''
         self.total_selected = 0
         self.remain_selected = 0
@@ -57,7 +58,7 @@ class AccountBook(QMainWindow):
         self.ui.yearly_lineEdit.setText(str(self.total_selected))
         self.ui.remain_lineEdit.setText(str(self.remain_selected))
         self.ui.submit_lineEdit.setText(str(self.submit_value))
-        self.ui.ltitle_label.setText("百联置业报销登记系统       ")
+        self.ui.ltitle_label.setText("百联置业报销登记系统 - {}  ".format(self.TITLE))
 
         # 检测是否存在db.sqlit不存在的话则按下初始化按钮后根据表格创建数据库
         if not self.sqlite_exist():
@@ -246,7 +247,7 @@ class AccountBook(QMainWindow):
                 conn.close()
                 updatetime_str = datetime.datetime.now().strftime(
                     "%Y-%m-%d %H-%M-%S")
-                export_file_name = '通讯费提取记录%s.xls' % (updatetime_str)
+                export_file_name = '{}提取记录{}.xls'.format(self.TITLE, updatetime_str)
                 workbook.save(export_file_name)
                 QMessageBox.information(
                     self, "Message",
@@ -533,7 +534,7 @@ class AccountBook(QMainWindow):
         """
         # 增加新员工信息表
         if self.sqlite_exist():
-            filename = 'data_txf.xls'
+            filename = 'data_{}.xls'.format(self.TITLE)
             data = xlrd.open_workbook(filename)
             conn = sqlite3.connect(self.DB_FILE)
             table = data.sheets()[0]
@@ -567,9 +568,9 @@ class AccountBook(QMainWindow):
         """
         根据表格内容创建数据库
         """
-        if self.data_txf_xls_exist():
+        if self.data_xls_exist():
             # 创建员工信息表
-            filename = 'data_txf.xls'
+            filename = 'data_{}.xls'.format(self.TITLE)
             data = xlrd.open_workbook(filename)
             conn = sqlite3.connect(self.DB_FILE)
             conn.execute(u'''CREATE TABLE DATASHEET(
@@ -627,7 +628,7 @@ class AccountBook(QMainWindow):
                 pass
         else:
             box = QMessageBox()
-            box.information(self, 'Message', '未找到员工信息文件:\ndata_txf.xls')
+            box.information(self, 'Message', '未找到员工信息文件:\ndata_{}.xls'.format(self.TITLE))
 
     def get_Name_List(self):
         conn = sqlite3.connect(self.DB_FILE)
@@ -646,12 +647,12 @@ class AccountBook(QMainWindow):
         else:
             return False
 
-    def data_txf_xls_exist(self):
+    def data_xls_exist(self):
         path = os.getcwd()
         file_list = os.listdir(path)
         for f in file_list:
             if not os.path.isdir(f):
-                if f == 'data_txf.xls':
+                if f == 'data_{}.xls'.format(self.TITLE):
                     return True
         else:
             return False
