@@ -493,7 +493,7 @@ class AccountBook(QMainWindow):
             modify_str = self.ui.yearly_lineEdit.text()
             if re.findall(r'^\d*\.?(\d|\d\d)?$', modify_str):
                 modify_value = float(self.ui.yearly_lineEdit.text())
-                if modify_value:
+                if modify_value != self.total_selected:
                     # 先判断数据提交后资金提取值是否过大，只能按照最大超前一个月提取交通费，不然给与提醒后再添加
                     conn = sqlite3.connect(self.DB_FILE)
                     cursor = conn.cursor()
@@ -520,7 +520,7 @@ class AccountBook(QMainWindow):
                     self.ui.submit_lineEdit.setText('0')
                 else:
                     box = QMessageBox()
-                    box.information(self, 'Message', '请输入数据')
+                    box.information(self, 'Message', '数据未修改')
             else:
                 box = QMessageBox()
                 box.information(self, 'Message', '请检查数据!。。。')
@@ -539,6 +539,7 @@ class AccountBook(QMainWindow):
             conn = sqlite3.connect(self.DB_FILE)
             table = data.sheets()[0]
             nrows = table.nrows
+            index = len(self.get_Name_List()) + 1
             count = 0
             for i in range(nrows - 1):
                 insertDatas = table.row_values(i + 1)
@@ -546,8 +547,9 @@ class AccountBook(QMainWindow):
                     conn.execute(
                         '''INSERT INTO DATASHEET(
                     ID,NAME,JAN,FEB,MAR,APR,MAY,JUN,JUL,AUG,SEP,OCT,NOV,DEC,MONTHLY,MONTHS,TOTAL,EXTRACTED,REMAIN
-                    ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                        (insertDatas))
+                    ) VALUES({}, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''.format(index),
+                        (insertDatas[1:]))
+                    index += 1
                     count += 1
                 else:
                     pass
@@ -595,13 +597,15 @@ class AccountBook(QMainWindow):
                 REMAIN FLOAT NOT NULL);''')
             table = data.sheets()[0]
             nrows = table.nrows
+            index = 1
             for i in range(nrows - 1):
                 insertDatas = table.row_values(i + 1)
                 conn.execute(
                     '''INSERT INTO DATASHEET(
                 ID,NAME,JAN,FEB,MAR,APR,MAY,JUN,JUL,AUG,SEP,OCT,NOV,DEC,MONTHLY,MONTHS,TOTAL,EXTRACTED,REMAIN
-                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                    (insertDatas))
+                ) VALUES({}, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''.format(index),
+                    (insertDatas[1:]))
+                index += 1
             conn.commit()
             conn.close()
             # 创建操作记录数据库记录表
