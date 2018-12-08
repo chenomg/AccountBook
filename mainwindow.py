@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -118,23 +118,27 @@ class Ui_MainWindow(object):
         self.now_label = QtWidgets.QLabel(self.money_frame)
         self.now_label.setObjectName("now_label")
         self.gridLayout.addWidget(self.now_label, 1, 0, 1, 1)
-        self.yearly_lineEdit = QtWidgets.QLineEdit(self.money_frame)
-        self.yearly_lineEdit.setEnabled(False)
-        self.yearly_lineEdit.setObjectName("yearly_lineEdit")
-        self.gridLayout.addWidget(self.yearly_lineEdit, 0, 1, 1, 1)
         self.yearly_label = QtWidgets.QLabel(self.money_frame)
         self.yearly_label.setObjectName("yearly_label")
         self.gridLayout.addWidget(self.yearly_label, 0, 0, 1, 1)
-        self.submit_lineEdit = QtWidgets.QLineEdit(self.money_frame)
-        self.submit_lineEdit.setObjectName("submit_lineEdit")
-        self.gridLayout.addWidget(self.submit_lineEdit, 1, 1, 1, 1)
-        self.remain_lineEdit = QtWidgets.QLineEdit(self.money_frame)
-        self.remain_lineEdit.setEnabled(False)
-        self.remain_lineEdit.setObjectName("remain_lineEdit")
-        self.gridLayout.addWidget(self.remain_lineEdit, 2, 1, 1, 1)
         self.remain_label = QtWidgets.QLabel(self.money_frame)
         self.remain_label.setObjectName("remain_label")
         self.gridLayout.addWidget(self.remain_label, 2, 0, 1, 1)
+        self.remain_lineEdit = QtWidgets.QLineEdit(self.money_frame)
+        self.remain_lineEdit.setEnabled(False)
+        self.remain_lineEdit.setObjectName("remain_lineEdit")
+        self.gridLayout.addWidget(self.remain_lineEdit, 2, 1, 1, 2)
+        self.yearly_modify_pushButton = QtWidgets.QPushButton(self.money_frame)
+        self.yearly_modify_pushButton.setEnabled(False)
+        self.yearly_modify_pushButton.setObjectName("yearly_modify_pushButton")
+        self.gridLayout.addWidget(self.yearly_modify_pushButton, 0, 2, 1, 1)
+        self.yearly_lineEdit = QtWidgets.QLineEdit(self.money_frame)
+        self.yearly_lineEdit.setEnabled(True)
+        self.yearly_lineEdit.setObjectName("yearly_lineEdit")
+        self.gridLayout.addWidget(self.yearly_lineEdit, 0, 1, 1, 1)
+        self.submit_lineEdit = QtWidgets.QLineEdit(self.money_frame)
+        self.submit_lineEdit.setObjectName("submit_lineEdit")
+        self.gridLayout.addWidget(self.submit_lineEdit, 1, 1, 1, 2)
         self.horizontalLayout.addWidget(self.money_frame)
         self.buttom_frame = QtWidgets.QFrame(self.top_frame)
         self.buttom_frame.setMaximumSize(QtCore.QSize(140, 16777215))
@@ -249,6 +253,7 @@ class Ui_MainWindow(object):
         self.now_label.setText(_translate("MainWindow", "本次报销(元)："))
         self.yearly_label.setText(_translate("MainWindow", "年度总额(元)："))
         self.remain_label.setText(_translate("MainWindow", "年度剩余(元)："))
+        self.yearly_modify_pushButton.setText(_translate("MainWindow", "调整"))
         self.submit_pushButton.setText(_translate("MainWindow", "提交"))
         self.cancel_pushButton.setText(_translate("MainWindow", "撤销"))
         self.init_pushButton.setText(_translate("MainWindow", "初始化"))

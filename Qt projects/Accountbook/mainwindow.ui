@@ -256,27 +256,10 @@
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="1">
-                 <widget class="QLineEdit" name="yearly_lineEdit">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                 </widget>
-                </item>
                 <item row="0" column="0">
                  <widget class="QLabel" name="yearly_label">
                   <property name="text">
                    <string>年度总额(元)：</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="1">
-                 <widget class="QLineEdit" name="submit_lineEdit"/>
-                </item>
-                <item row="2" column="1">
-                 <widget class="QLineEdit" name="remain_lineEdit">
-                  <property name="enabled">
-                   <bool>false</bool>
                   </property>
                  </widget>
                 </item>
@@ -286,6 +269,33 @@
                    <string>年度剩余(元)：</string>
                   </property>
                  </widget>
+                </item>
+                <item row="2" column="1" colspan="2">
+                 <widget class="QLineEdit" name="remain_lineEdit">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="2">
+                 <widget class="QPushButton" name="yearly_modify_pushButton">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>调整</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QLineEdit" name="yearly_lineEdit">
+                  <property name="enabled">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1" colspan="2">
+                 <widget class="QLineEdit" name="submit_lineEdit"/>
                 </item>
                </layout>
               </widget>
